@@ -6,4 +6,5 @@ plan:
 projects:
   helloflask-project:
     root: /projects/helloflask-project
+    buildCommand: cd /project/target && ./install.sh; cd -
     runner: python:3
