@@ -2,3 +2,8 @@ title: Flask Forum Tutorial
 plan:
   - title: Hello Flask
     statement: statements/hello-flask.md
+
+projects:
+  helloflask-project:
+    root: /projects/helloflask-project
+    runner: python:3
