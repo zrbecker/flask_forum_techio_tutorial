@@ -8,5 +8,5 @@ A simple Flask application.
   "stubs": ["helloflask/helloflask.py"],
   "command": "python3 server.py",
   "project": "helloflask-project",
-  "layout": "inline",
+  "layout": "inline"
 })
