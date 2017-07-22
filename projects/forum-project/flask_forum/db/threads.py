@@ -1,13 +1,13 @@
 SQL_LIST_THREADS = 'select thread_id, title from threads;'
-SQL_LIST_POSTS_FOR_THREAD = 'select post_id, user_id, message from posts where'
-        ' thread_id = ?'
-SQL_LIST_POSTS_FOR_USER = 'select thread_id, user_id, message from posts where'
-        ' post_id = ?'
+SQL_LIST_POSTS_FOR_THREAD = 'select post_id, user_id, message from posts' \
+        ' where thread_id = ?'
+SQL_LIST_POSTS_FOR_USER = 'select thread_id, user_id, message from posts' \
+        ' where post_id = ?'
 
 SQL_READ_THREAD = 'select title from threads where thread_id = ?'
 
 SQL_CREATE_THREAD = 'insert into threads (title) values (?)'
-SQL_CREATE_POST = 'insert into posts (user_id, thread_id, message)'
+SQL_CREATE_POST = 'insert into posts (user_id, thread_id, message)' \
         ' values (?, ?, ?)'
 
 class Thread:
