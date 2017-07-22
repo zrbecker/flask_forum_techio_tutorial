@@ -1,10 +1,15 @@
 SQL_LIST_THREADS = 'select thread_id, title from threads;'
 SQL_LIST_POSTS_FOR_THREAD = 'select post_id, user_id, message from posts' \
-        ' where thread_id = ?'
+        ' where thread_id = ? ORDER BY posted'
 SQL_LIST_POSTS_FOR_USER = 'select thread_id, user_id, message from posts' \
-        ' where post_id = ?'
+        ' where post_id = ? ORDER BY posted'
 
 SQL_READ_THREAD = 'select title from threads where thread_id = ?'
+
+SQL_READ_THREAD_AUTHOR_USER_ID = 'select user_id, posted from posts' \
+        ' where thread_id = ? order by posted limit 1'
+SQL_READ_THREAD_LAST_USER_ID = 'select user_id, posted from posts' \
+        ' where thread_id = ? order by posted desc limit 1'
 
 SQL_CREATE_THREAD = 'insert into threads (title) values (?)'
 SQL_CREATE_POST = 'insert into posts (user_id, thread_id, message)' \
@@ -43,6 +48,16 @@ class ThreadDB:
     def read_thread(self, thread_id):
         title, = self.db.execute(SQL_READ_THREAD, (thread_id,)).fetchone()
         return Thread(thread_id, title)
+
+    def read_thread_author_id(self, thread_id):
+        user_id, posted = self.db.execute(SQL_READ_THREAD_AUTHOR_USER_ID,
+                (thread_id,)).fetchone()
+        return user_id, posted
+
+    def read_thread_last_id(self, thread_id):
+        user_id, posted = self.db.execute(SQL_READ_THREAD_LAST_USER_ID,
+                (thread_id,)).fetchone()
+        return user_id, posted
 
     def create_thread(self, user_id, title, message):
         thread_id = self.db.execute(SQL_CREATE_THREAD, (title,)).lastrowid
