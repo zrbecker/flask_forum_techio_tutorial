@@ -10,9 +10,9 @@ class UserDB:
         return self.db.execute(SQL_CREATE_USER, (username, password)).lastrowid
 
     def read_username(self, user_id):
-        username, = self.db.execute(SQL_READ_USERNAME, (user_id,))
+        username, = self.db.execute(SQL_READ_USERNAME, (user_id,)).fetchone()
         return username
 
     def validate_password(self, user_id, password):
-        db_password, = self.db.execute(SQL_READ_PASSWORD, (user_id,))
+        db_password, = self.db.execute(SQL_READ_PASSWORD, (user_id,)).fetchone()
         return password == db_password

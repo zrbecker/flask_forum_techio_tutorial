@@ -40,8 +40,8 @@ class ThreadDB:
                 for post_id, thread_id, message
                 in self.db.execute(SQL_LIST_POSTS_FOR_USER, (user_id,))]
 
-    def thread(self, thread_id):
-        title, = self.db.execute(SQL_READ_THREAD, (thread_id,))
+    def read_thread(self, thread_id):
+        title, = self.db.execute(SQL_READ_THREAD, (thread_id,)).fetchone()
         return Thread(thread_id, title)
 
     def create_thread(self, user_id, title, message):
