@@ -1,4 +1,4 @@
-from flask import Flask, url_for
+from flask import Flask, render_template, url_for
 import os
 import sqlite3
 
@@ -36,23 +36,46 @@ class Users:
     def list_users(self):
         return list(self.db.execute('select * from users;'))
 
+    def username(self, user_id):
+        return self.db.execute('select username from users where user_id = ?',
+                str(user_id)).fetchone()[0]
+
 class Threads:
     def __init__(self, db):
         self.db = db
+
+    def title(self, thread_id):
+        return self.db.execute('select title from threads where thread_id = ?',
+                str(thread_id)).fetchone()[0]
 
     def list_threads(self):
         return list(self.db.execute('select * from threads;'))
 
     def list_posts(self, thread_id):
         return list(self.db.execute(
-                'select * from posts where thread_id = ?', thread_id))
+                'select * from posts where thread_id = ?', str(thread_id)))
 
-@app.route("/")
+@app.route('/')
 def index():
+    return threads() 
+
+@app.route('/threads')
+def threads():
     db = sqlite3.connect(DATABASE_PATH)
-    users = Users(db)
-    return ', '.join(['{} {} {}'.format(user_id, username, password)
-        for user_id, username, password in users.list_users()])
+    threads = [{'thread_id': thread_id, 'title': title}
+            for thread_id, title in Threads(db).list_threads()]
+    return render_template('threads.html', threads=threads)
+
+@app.route('/posts/<thread_id>')
+def posts(thread_id):
+    db = sqlite3.connect(DATABASE_PATH)
+    threaddb = Threads(db)
+    title = threaddb.title(thread_id)
+    posts = threaddb.list_posts(thread_id)
+    usersdb = Users(db)
+    posts = [{'username': usersdb.username(user_id), 'message': message}
+            for _, user_id, _, message in posts]
+    return render_template('posts.html', posts=posts, title=title)
 
 @app.route("/page")
 def page():
