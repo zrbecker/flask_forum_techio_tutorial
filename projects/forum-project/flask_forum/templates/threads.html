@@ -2,9 +2,23 @@
 
 {% block content %}
 
+<div class="page-header">
+  <h1>Threads</h1>
+  <a href="#" class="btn btn-default">New Thread</a>
+</div>
+
+<div class="container">
 {% for thread in threads %}
-<p><a href="{{ url_for('posts', thread_id=thread.thread_id) }}">
-  {{ thread.title }}</a></p>
+  <div class="row">
+    <div class="col-md-6">
+      <a href="{{ url_for('posts', thread_id=thread.thread_id) }}">
+        {{ thread.title }}</a>
+    </div>
+    <div class="col-md-3">Unknown</div>
+    <div class="col-md-3">Unknown</div>
+  </div>
+  <hr />
 {% endfor %}
+</div>
 
 {% endblock %}
