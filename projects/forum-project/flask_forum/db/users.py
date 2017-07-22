@@ -2,7 +2,7 @@ SQL_CREATE_USER = 'insert into users (username, password) values (?, ?)'
 SQL_READ_USERNAME = 'select username from users where user_id = ?'
 SQL_READ_PASSWORD = 'select password from users where user_id = ?'
 
-def UserDB:
+class UserDB:
     def __init__(self, db):
         self.db = db
 
