@@ -71,6 +71,41 @@ def threads():
     return render_template('threads.html', threads=thread_contexts,
             username=username)
 
+@app.route('/thread/create', methods=['GET', 'POST'])
+def thread_create():
+    username = None
+    if 'username' in session:
+        username = session['username']
+        if request.method == 'GET':
+            return render_template('new_thread.html', username=username)
+        elif 'thread-title' in request.form and 'thread-message' in request.form:
+            user_id = session['user_id']
+            title = request.form['thread-title']
+            message = request.form['thread-message']
+
+            db = sqlite3.connect(DATABASE_PATH)
+            thread_db = ThreadDB(db)
+            thread_db.create_thread(user_id, title, message)
+    return redirect(url_for('index'))
+
+@app.route('/thread/<thread_id>/post/create', methods=['GET', 'POST'])
+def post_create(thread_id):
+    username = None
+    if 'username' in session:
+        username = session['username']
+        if request.method == 'GET':
+            return render_template('new_post.html', username=username,
+                    thread_id=thread_id)
+        elif 'thread-message' in request.form:
+            user_id = session['user_id']
+            message = request.form['thread-message']
+
+            db = sqlite3.connect(DATABASE_PATH)
+            thread_db = ThreadDB(db)
+            thread_db.create_post(user_id, thread_id, message)
+            return redirect(url_for('posts', thread_id=thread_id))
+    return redirect(url_for('index'))
+
 @app.route('/posts/<thread_id>')
 def posts(thread_id):
     db = sqlite3.connect(DATABASE_PATH)
@@ -92,4 +127,4 @@ def posts(thread_id):
     if 'username' in session:
         username = session['username']
     return render_template('posts.html', posts=posts, title=thread.title,
-            username=username)
+            username=username, thread_id=thread_id)

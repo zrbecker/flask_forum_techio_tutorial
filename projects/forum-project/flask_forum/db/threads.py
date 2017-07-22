@@ -1,4 +1,4 @@
-SQL_LIST_THREADS = 'select thread_id, title from threads;'
+SQL_LIST_THREADS = 'select thread_id, title from threads'
 SQL_LIST_POSTS_FOR_THREAD = 'select post_id, user_id, message from posts' \
         ' where thread_id = ? ORDER BY posted'
 SQL_LIST_POSTS_FOR_USER = 'select thread_id, user_id, message from posts' \
@@ -65,3 +65,4 @@ class ThreadDB:
 
     def create_post(self, user_id, thread_id, message):
         self.db.execute(SQL_CREATE_POST, (user_id, thread_id, message))
+        self.db.commit()

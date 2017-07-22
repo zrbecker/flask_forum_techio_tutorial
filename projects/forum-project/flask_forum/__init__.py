@@ -1,4 +1,6 @@
 from .flask_forum import app
+import os
+import sqlite3
 
 @app.cli.command()
 def init_schema():
