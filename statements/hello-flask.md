@@ -6,7 +6,7 @@ A simple Flask application.
 
 @[Hello Flask Web Application]({
   "stubs": ["helloflask/helloflask.py"],
-  "command": "FLASK_APP=helloflask python3 -m flask run",
+  "command": "python3 server.py",
   "project": "helloflask-project",
   "layout": "inline"
 })
