@@ -1,4 +1,10 @@
+{% extends 'main_layout.html' %}
+
+{% block content %}
+
 {% for thread in threads %}
 <p><a href="{{ url_for('posts', thread_id=thread.thread_id) }}">
   {{ thread.title }}</a></p>
 {% endfor %}
+
+{% endblock %}
