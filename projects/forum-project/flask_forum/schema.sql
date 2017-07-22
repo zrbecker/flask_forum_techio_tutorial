@@ -16,5 +16,6 @@ create table posts(
   post_id integer primary key autoincrement,
   user_id integer not null,
   thread_id integer not null,
-  message text not null
+  message text not null,
+  posted datetime default current_timestamp 
 );
