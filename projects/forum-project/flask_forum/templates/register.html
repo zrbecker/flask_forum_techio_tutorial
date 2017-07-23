@@ -1,0 +1,31 @@
+{% extends 'main_layout.html' %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>Register</h1>
+</div>
+
+<div class="container">
+  <form action="{{ url_for('register') }}" method="POST">
+    <div class="form-group row">
+      <label for="username" class="col-2 col-form-label">Username</label>
+      <div class="col-10">
+        <input type="text" class="form-control" placeholder="Username"
+            id="username" name="username">
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="password" class="col-2 col-form-label">Password</label>
+      <div class="col-10">
+        <input type="password" class="form-control" placeholder="Password"
+            id="password" name="password">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <a href="{{ url_for('posts', thread_id=thread_id) }}"
+        class="btn btn-default">Back</a>
+  </form>
+</div>
+
+{% endblock %}

@@ -17,6 +17,26 @@ from .models import User, Post, Thread
 def index():
     return threads() 
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    try:
+        if request.method == 'GET':
+            return render_template('register.html')
+
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username is not None and password is not None:
+            new_user = User(username, password)
+            db.session.add(new_user)
+            db.session.commit()
+
+            session['user_id'] = new_user.id
+            session['username'] = new_user.username
+    except Exception as e:
+        print('Register Exception:', e)
+
+    return redirect(url_for('index'))
+
 @app.route('/login', methods=['POST'])
 def login():
     try:
