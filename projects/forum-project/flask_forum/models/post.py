@@ -1,5 +1,5 @@
 from datetime import datetime
-from ..flask_forum import db
+from ..app import db
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
