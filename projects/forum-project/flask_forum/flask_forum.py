@@ -1,15 +1,17 @@
 from flask import Flask, redirect, request, render_template, session, url_for
-import os
-import sqlite3
-
-from .db.threads import ThreadDB, Thread, Post
-from .db.users import UserDB
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.secret_key = 'development secret'
 
-DATABASE_FILENAME = 'forum.db'
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), DATABASE_FILENAME)
+class DevelopmentConfig:
+    SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/flask_forum.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+
+app.config.from_object(DevelopmentConfig)
+db = SQLAlchemy(app)
+
+from .models import User, Post, Thread
 
 @app.route('/')
 def index():
@@ -22,13 +24,10 @@ def login():
             username = request.form['username']
             password = request.form['password']
 
-            db = sqlite3.connect(DATABASE_PATH)
-            user_db = UserDB(db)
-
-            user_id = user_db.read_user_id(username)
-            if user_db.validate_password(user_id, password):
-                session['user_id'] = user_id
-                session['username'] = username
+            user = User.query.filter_by(username=username).first()
+            if password == user.password:
+                session['user_id'] = user.id
+                session['username'] = user.username
     except Exception as e:
         print('Login Exception:', e)
 
@@ -45,86 +44,87 @@ def logout():
 
 @app.route('/threads')
 def threads():
-    db = sqlite3.connect(DATABASE_PATH)
-    thread_db = ThreadDB(db)
-    user_db = UserDB(db)
+    context = {
+        'threads': [],
+        'username': session.get('username', None)
+    }
 
-    threads = thread_db.list_threads()
-    thread_contexts = []
+    threads = Thread.query.all()
     for thread in threads:
-        thread_id = thread.thread_id
-        author_id, created_time = thread_db.read_thread_author_id(thread_id)
-        last_id, last_post_time = thread_db.read_thread_last_id(thread_id)
-        thread_context = {
-            'thread_id': thread_id,
+        first_post = thread.posts.order_by(Post.posted.asc()).first()
+        last_post = thread.posts.order_by(Post.posted.desc()).first()
+        context['threads'].append({
+            'thread_id': thread.id,
             'title': thread.title,
-            'author': user_db.read_username(author_id),
-            'created_time': created_time,
-            'last': user_db.read_username(last_id),
-            'last_post_time': last_post_time
-        }
-        thread_contexts.append(thread_context)
+            'author': first_post.user.username,
+            'created_time': first_post.posted.strftime('%c'),
+            'last': last_post.user.username,
+            'last_post_time': last_post.posted.strftime('%c')
+        })
 
-    username = None
-    if 'username' in session:
-        username = session['username']
-    return render_template('threads.html', threads=thread_contexts,
-            username=username)
+    return render_template('threads.html', **context)
 
 @app.route('/thread/create', methods=['GET', 'POST'])
 def thread_create():
-    username = None
-    if 'username' in session:
-        username = session['username']
-        if request.method == 'GET':
-            return render_template('new_thread.html', username=username)
-        elif 'thread-title' in request.form and 'thread-message' in request.form:
-            user_id = session['user_id']
-            title = request.form['thread-title']
-            message = request.form['thread-message']
+    username = session.get('username', None)
+    if username is None:
+        return redirect(url_for('index'))
 
-            db = sqlite3.connect(DATABASE_PATH)
-            thread_db = ThreadDB(db)
-            thread_db.create_thread(user_id, title, message)
+    if request.method == 'GET':
+        return render_template('new_thread.html', username=username)
+
+    if 'thread-title' in request.form and 'thread-message' in request.form:
+        user_id = session['user_id']
+        title = request.form['thread-title']
+        message = request.form['thread-message']
+
+        user = User.query.filter_by(id=user_id).first()
+        new_thread = Thread(title)
+        new_post = Post(user, new_thread, message)
+
+        db.session.add(new_thread)
+        db.session.add(new_post)
+        db.session.commit()
+
     return redirect(url_for('index'))
 
 @app.route('/thread/<thread_id>/post/create', methods=['GET', 'POST'])
 def post_create(thread_id):
-    username = None
-    if 'username' in session:
-        username = session['username']
-        if request.method == 'GET':
-            return render_template('new_post.html', username=username,
-                    thread_id=thread_id)
-        elif 'thread-message' in request.form:
-            user_id = session['user_id']
-            message = request.form['thread-message']
+    username = session.get('username', None)
+    if username is None:
+        return redirect(url_for('index'))
 
-            db = sqlite3.connect(DATABASE_PATH)
-            thread_db = ThreadDB(db)
-            thread_db.create_post(user_id, thread_id, message)
-            return redirect(url_for('posts', thread_id=thread_id))
-    return redirect(url_for('index'))
+    if request.method == 'GET':
+        return render_template('new_post.html',
+            username=username, thread_id=thread_id)
+
+    if 'thread-message' in request.form:
+        user_id = session['user_id']
+        message = request.form['thread-message']
+
+        user = User.query.filter_by(id=user_id).first()
+        thread = Thread.query.filter_by(id=thread_id).first()
+        new_post = Post(user, thread, message)
+
+        db.session.add(new_post)
+        db.session.commit()
+
+    return redirect(url_for('posts', thread_id=thread_id))
 
 @app.route('/posts/<thread_id>')
 def posts(thread_id):
-    db = sqlite3.connect(DATABASE_PATH)
-    thread_db = ThreadDB(db)
-    user_db = UserDB(db)
+    thread = Thread.query.filter_by(id=thread_id).first()
+    context = {
+        'posts': [],
+        'title': thread.title,
+        'username': session.get('username', None),
+        'thread_id': thread_id
+    }
 
-    thread = thread_db.read_thread(thread_id)
-    posts = thread_db.list_posts_for_thread(thread_id)
-
-    posts = [
-        {
-            'username': user_db.read_username(post.user_id),
+    for post in thread.posts:
+        context['posts'].append({
+            'username': post.user.username,
             'message': post.message
-        }
-        for post in posts
-    ]
+        })
 
-    username = None
-    if 'username' in session:
-        username = session['username']
-    return render_template('posts.html', posts=posts, title=thread.title,
-            username=username, thread_id=thread_id)
+    return render_template('posts.html', **context)
